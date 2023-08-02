@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather App</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="cards-container">
+    <div class="card">
+        <div class="search">
+            <input type="text" placeholder="enter city name" spellcheck="false">
+            <button id="weather-btn"><img src="images/search.png"></button>
+        </div>
+        <div class="error">
+            <p>Invalid city name</p>
+        </div>
+        <div class="weather">
+            <img src="images/rain.png" class="weather-icon">
+            <h1 class="temp">22°C</h1>
+            <h2 class="city">New York</h2>
+            <div class="details">
+                <div class="col">
+                    <img src="images/humidity.png">
+                    <div>
+                        <p class="humidity">50%</p>
+                        <p>Humidity</p>
+                    </div>
+                </div>
+                <div class="col">
+                    <img src="images/wind.png">
+                    <div>
+                        <p class="wind">15 km/h</p>
+                        <p>Wind Speed</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="card news-card" style="display: none;"> <!-- Add this line -->
+        <h3>Latest News</h3>
+        <ul id="news-list"></ul>
+    </div>
+</div>
+
+<script>
+const weatherApiKey = "863242cfb2b1d357e6093d9a4df19a4b";
+const weatherApiUrl = "https://api.openweathermap.org/data/2.5/weather?units=metric&q=";
+const searchBox = document.querySelector(".search input");
+const weatherBtn = document.querySelector(".search button");
+const weatherIcon = document.querySelector(".weather-icon");
+const newsList = document.getElementById("news-list");
+const newsApiUrl = 'https://gnews.io/api/v4/search?q=';
+
+weatherBtn.addEventListener("click", () => {
+    const city = searchBox.value;
+    checkWeather(city);
+    fetchNews(city);
+});
+
+async function checkWeather(city) {
+    const response = await fetch(weatherApiUrl + city + `&appid=${weatherApiKey}`);
+    if (response.status == 404) {
+        document.querySelector(".error").style.display = "block";
+        document.querySelector(".weather").style.display = "none";
+    } else {
+        const data = await response.json();
+        document.querySelector(".city").innerHTML = data.name;
+        document.querySelector(".temp").innerHTML = Math.round(data.main.temp) + "°C";
+        document.querySelector(".humidity").innerHTML = data.main.humidity + "%";
+        document.querySelector(".wind").innerHTML = data.wind.speed + " km/h";
+        if (data.weather[0].main == "Clouds") {
+            weatherIcon.src = "images/clouds.png";
+        } else if (data.weather[0].main == "Clear") {
+            weatherIcon.src = "images/clear.png";
+        } else if (data.weather[0].main == "Rain") {
+            weatherIcon.src = "images/rain.png";
+        } else if (data.weather[0].main == "Drizzle") {
+            weatherIcon.src = "images/drizzle.png";
+        } else if (data.weather[0].main == "Mist") {
+            weatherIcon.src = "images/mist.png";
+        }
+        document.querySelector(".weather").style.display = "block";
+        document.querySelector(".error").style.display = "none";
+    }
+}
+
+async function fetchNews(city) {
+    const apikey = '2229c05ee1ef3c6c494c7ece92dbf0c4';
+    const url = `${newsApiUrl}${city}&lang=en&max=10&apikey=${apikey}`;
+    
+    const response = await fetch(url);
+    const data = await response.json();
+
+    let newsListHTML = "";
+    data.articles.forEach(article => {
+        const articleHTML = `
+            <li>
+                <h4>${article.title}</h4>
+                <p>${article.description}</p>
+                <a href="${article.url}" target="_blank">Read more</a>
+            </li>
+        `;
+        newsListHTML += articleHTML;
+    });
+    newsList.innerHTML = newsListHTML;
+    // Display the news card
+    document.querySelector('.news-card').style.display = "block";
+}
+</script>
+
+</body>
+</html>
